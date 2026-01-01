@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Paint and Chat 🎨
+
+A cozy, real-time collaborative drawing and chatting application built with Next.js and Socket.io.
+
+## Features
+
+- **Real-time Collaboration**: Draw with friends in real-time.
+- **Live Chat**: Integrated chat sidebar to communicate while you create.
+- **Drawing Tools**:
+  - Brush (with adjustable size, opacity, and styles like dotted/fuzzy)
+  - Eraser
+  - Bucket Fill
+  - Shapes (Rectangle, Circle, Line)
+- **Daily Challenge**: A built-in game mode with random prompts and a timer to spark creativity.
+- **Cozy UI**: A warm, accessible, and mobile-friendly interface.
+- **Mobile Support**: Fully responsive design with touch support for drawing on tablets and phones.
+
+## Tech Stack
+
+- **Framework**: [Next.js](https://nextjs.org/) (App Router & Pages Router for API)
+- **Real-time Engine**: [Socket.io](https://socket.io/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Graphics**: HTML5 Canvas API
 
 ## Getting Started
 
-First, run the development server:
+1.  **Clone the repository**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+2.  **Install dependencies**
+    ```bash
+    npm install
+    # or
+    yarn install
+    ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3.  **Run the development server**
+    ```bash
+    npm run dev
+    ```
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+4.  **Open the app**
+    Visit [http://localhost:3000](http://localhost:3000) in your browser. Open multiple tabs or use different devices on the same network to test the real-time features!
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project Structure
 
-## Learn More
+- `src/app/`: Main application code (App Router).
+- `src/pages/api/socket.js`: Socket.io server handler.
+- `src/components/`: Reusable UI components (Canvas, Toolbar, ChatSidebar, GameSidebar).
+- `src/lib/`: Utility functions and socket client initialization.
 
-To learn more about Next.js, take a look at the following resources:
+## Contributing
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Feel free to open issues or submit pull requests if you have ideas for new tools or features!
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
