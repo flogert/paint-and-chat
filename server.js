@@ -1,16 +1,18 @@
 const express = require("express");
 const next = require("next");
 const socketIo = require("socket.io");
+const http = require("http");
 
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
-  const server = express();
-
-  // Create the socket.io server
-  const io = socketIo(server);
+  const expressApp = express();
+  const server = http.createServer(expressApp);
+  const io = socketIo(server, {
+    path: '/api/socket',
+  });
 
   // Handle socket connections
   io.on("connection", (socket) => {
@@ -20,21 +22,26 @@ app.prepare().then(() => {
       console.log("user disconnected");
     });
 
-    // Add your custom socket event listeners here
+    // Handle drawing events
     socket.on("draw", (data) => {
-      console.log("draw event received", data);
-      socket.broadcast.emit("draw", data);  // Broadcast the drawing to other clients
+      socket.broadcast.emit("draw", data);
+    });
+
+    // Handle chat events
+    socket.on("chat", (message) => {
+      socket.broadcast.emit("chat", message);
     });
   });
 
   // Next.js custom routing
-  server.all("*", (req, res) => {
+  expressApp.all("*", (req, res) => {
     return handle(req, res);
   });
 
   // Start the server
-  server.listen(3000, (err) => {
+  const PORT = process.env.PORT || 3000;
+  server.listen(PORT, (err) => {
     if (err) throw err;
-    console.log("> Ready on http://localhost:3000");
+    console.log(`> Ready on http://localhost:${PORT}`);
   });
 });
