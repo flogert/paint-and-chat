@@ -139,9 +139,17 @@ export default function RoomLobby({ onJoinRoom }) {
           </h1>
           <p className="text-stone-500">Draw together with friends!</p>
           {!isConnected && (
-            <div className="mt-3 inline-flex items-center gap-2 text-amber-600 text-sm bg-amber-50 px-4 py-2 rounded-full">
-              <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
-              Connecting to server...
+            <div className="mt-3 flex flex-col items-center gap-2">
+              <div className="inline-flex items-center gap-2 text-amber-600 text-sm bg-amber-50 px-4 py-2 rounded-full">
+                <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
+                Connecting to server...
+              </div>
+              <button
+                onClick={() => socket.connect()}
+                className="text-xs text-stone-500 hover:text-stone-700 underline"
+              >
+                Retry connection
+              </button>
             </div>
           )}
           {isConnected && (

@@ -46,6 +46,14 @@ app.prepare().then(() => {
   const server = http.createServer(expressApp);
   const io = socketIo(server, {
     path: '/api/socket',
+    cors: {
+      origin: process.env.NODE_ENV === 'production' 
+        ? [process.env.RENDER_EXTERNAL_URL || '*']
+        : ['http://localhost:3000'],
+      methods: ['GET', 'POST'],
+      credentials: true
+    },
+    transports: ['websocket', 'polling'],
   });
 
   // Handle socket connections
@@ -347,6 +355,11 @@ app.prepare().then(() => {
         callback({ success: false });
       }
     });
+  });
+
+  // Health check endpoint for Render
+  expressApp.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: Date.now() });
   });
 
   // Next.js custom routing
