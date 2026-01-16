@@ -134,12 +134,7 @@ class SoundManager {
     setTimeout(() => this.playTone(1047, 0.2, 'sine'), 300)
   }
   
-  // Clear canvas sound
-  clear() {
-    // this.playTone(800, 0.15, 'sawtooth')
-    // setTimeout(() => this.playTone(400, 0.15, 'sawtooth'), 50)
-    // setTimeout(() => this.playTone(200, 0.2, 'sawtooth'), 100)
-  }
+  // Note: clear() is defined above
 
   // Tool switch sound
   toolSwitch() {

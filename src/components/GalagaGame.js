@@ -202,7 +202,7 @@ export default function GalagaGame({ onClose, side, leftShipImage, rightShipImag
       ctx.globalAlpha = 1
 
       // Players
-      ['left', 'right'].forEach(pSide => {
+      ;['left', 'right'].forEach(pSide => {
          const p = state.players[pSide]
          if (p.image && p.image.complete) {
             // Draw image centered

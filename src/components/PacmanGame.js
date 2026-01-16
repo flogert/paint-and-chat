@@ -286,7 +286,7 @@ export default function PacmanGame({ side, onClose, leftPacmanImage, rightPacman
        })
        
        // Draw Players
-       ['left', 'right'].forEach(s => {
+       ;['left', 'right'].forEach(s => {
            const ply = playersRef.current[s]
            const img = s === 'left' ? leftImgRef.current : rightImgRef.current
            

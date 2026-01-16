@@ -197,8 +197,8 @@ export default function Toolbar({
       <div 
         className="fixed z-50 p-2 bg-white rounded-xl shadow-xl border border-gray-200 flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200"
         style={{
-          top: deleteBtnRef.current ? deleteBtnRef.current.getBoundingClientRect().bottom + 12 : 'auto',
-          left: deleteBtnRef.current ? deleteBtnRef.current.getBoundingClientRect().right - 120 : 'auto',
+          top: 60,
+          right: 20,
         }}
       >
         <span className="text-xs font-medium text-gray-600 whitespace-nowrap pl-1">Clear all?</span>

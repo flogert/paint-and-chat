@@ -7,6 +7,8 @@ import sounds from '@/lib/sounds'
 export default function PongGame({ isActive, playerSide, onClose, onScoreUpdate, leftPaddleImage, rightPaddleImage, onGameWin }) {
   const canvasRef = useRef(null)
   const animationRef = useRef(null)
+  const leftImgRef = useRef(null)
+  const rightImgRef = useRef(null)
   const gameStateRef = useRef({
     ball: { x: 0.5, y: 0.5, vx: 0.008, vy: 0.006 },
     leftPaddle: 0.5,
@@ -22,12 +24,12 @@ export default function PongGame({ isActive, playerSide, onClose, onScoreUpdate,
      if (leftPaddleImage) {
          const img = new Image()
          img.src = leftPaddleImage
-         gameStateRef.current.leftImg = img
+         leftImgRef.current = img
      }
      if (rightPaddleImage) {
          const img = new Image()
          img.src = rightPaddleImage
-         gameStateRef.current.rightImg = img
+         rightImgRef.current = img
      }
   }, [leftPaddleImage, rightPaddleImage])
   

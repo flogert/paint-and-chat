@@ -171,7 +171,7 @@ export default function TronGame({ onClose, playerSide, leftImage, rightImage })
       for(let i=0; i<canvas.height; i+=40) { ctx.moveTo(0,i); ctx.lineTo(canvas.width, i) }
       ctx.stroke()
 
-      ['left', 'right'].forEach(side => {
+      ;['left', 'right'].forEach(side => {
           const p = state.players[side]
           
           // Draw Trail
@@ -260,7 +260,7 @@ export default function TronGame({ onClose, playerSide, leftImage, rightImage })
         />
         
         <div className="mt-4 text-xs text-cyan-400 font-mono">
-             Use Arrow Keys. Don't hit the walls or trails!
+             Use Arrow Keys. Don&apos;t hit the walls or trails!
         </div>
       </div>
     </div>
