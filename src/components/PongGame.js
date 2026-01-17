@@ -98,16 +98,24 @@ export default function PongGame({ isActive, playerSide, onClose, onScoreUpdate,
       sounds.pop()
     }
 
+    const handleGameOver = ({ winner }) => {
+       if (winner === playerSide) {
+           onGameWin && onGameWin(10)
+       }
+    }
+
     socket.on('pongPaddle', handlePaddleMove)
     socket.on('pongBall', handleBallSync)
     socket.on('pongScore', handlePongScore)
+    socket.on('pong-game-over', handleGameOver)
 
     return () => {
       socket.off('pongPaddle', handlePaddleMove)
       socket.off('pongBall', handleBallSync)
       socket.off('pongScore', handlePongScore)
+      socket.off('pong-game-over', handleGameOver)
     }
-  }, [playerSide])
+  }, [playerSide, onGameWin])
 
   // Game loop
   const gameLoop = useCallback(() => {
@@ -173,7 +181,10 @@ export default function PongGame({ isActive, playerSide, onClose, onScoreUpdate,
         sounds.success()
         
         if (state.rightScore >= 5) {
-             onGameWin && onGameWin(10) // 10 coins for winning
+             socket.emit('pong-game-over', { winner: 'right' })
+             state.leftScore = 0; state.rightScore = 0; // Reset internal state
+             setScores({ left: 0, right: 0 }) 
+             // Note: Host will receive the event too and restart or show game over screen
         }
 
         // Reset ball
@@ -186,7 +197,9 @@ export default function PongGame({ isActive, playerSide, onClose, onScoreUpdate,
         sounds.success()
 
         if (state.leftScore >= 5) {
-             onGameWin && onGameWin(10) // 10 coins for winning
+             socket.emit('pong-game-over', { winner: 'left' })
+             state.leftScore = 0; state.rightScore = 0;
+             setScores({ left: 0, right: 0 })
         }
 
         // Reset ball

@@ -11,6 +11,7 @@ export default function RoomLobby({ onJoinRoom }) {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
 
   // Check socket connection
   useEffect(() => {
@@ -119,97 +120,184 @@ export default function RoomLobby({ onJoinRoom }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-stone-100 via-stone-50 to-stone-100 flex items-center justify-center z-50">
-      {/* Decorative background elements */}
+    <div className="fixed inset-0 bg-gradient-to-br from-amber-50 via-stone-50 to-sky-50 flex items-center justify-center z-50 p-4">
+      {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-20 -left-20 w-96 h-96 bg-amber-200/30 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-sky-200/30 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-orange-100/20 to-indigo-100/20 rounded-full blur-3xl"></div>
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-amber-200/30 rounded-full blur-3xl" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-sky-200/30 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-rose-200/20 rounded-full blur-3xl" />
       </div>
       
-      <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 border border-stone-200/50">
+      {/* Help Modal */}
+      {showHelp && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowHelp(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 animate-fade-in" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-stone-800">How to Use Paint & Chat</h3>
+              <button onClick={() => setShowHelp(false)} className="text-stone-400 hover:text-stone-600 text-2xl leading-none">&times;</button>
+            </div>
+            
+            <div className="space-y-4 text-sm text-stone-600">
+              <div className="flex gap-3">
+                <span className="text-2xl">1️⃣</span>
+                <div>
+                  <p className="font-semibold text-stone-800">Create or Join a Room</p>
+                  <p>Create a new room and share the code with friends, or join an existing room using a code.</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <span className="text-2xl">2️⃣</span>
+                <div>
+                  <p className="font-semibold text-stone-800">Draw on Your Canvas</p>
+                  <p>Each player has their own side. Use the toolbar to pick brushes, colors, and special effects!</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <span className="text-2xl">3️⃣</span>
+                <div>
+                  <p className="font-semibold text-stone-800">Chat & Play Games</p>
+                  <p>Use the chat to talk with friends. Try drawing prompts or play fun minigames together!</p>
+                </div>
+              </div>
+              
+              <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
+                <p className="font-semibold text-amber-800 mb-2">⌨️ Keyboard Shortcuts</p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div><span className="kbd">B</span> Brush</div>
+                  <div><span className="kbd">E</span> Eraser</div>
+                  <div><span className="kbd">Ctrl+Z</span> Undo</div>
+                  <div><span className="kbd">Ctrl+Y</span> Redo</div>
+                  <div><span className="kbd">1-9</span> Brush Size</div>
+                  <div><span className="kbd">Tab</span> Switch Side</div>
+                </div>
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => setShowHelp(false)}
+              className="w-full mt-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl font-semibold hover:from-amber-500 hover:to-orange-600 transition-all"
+            >
+              Got it!
+            </button>
+          </div>
+        </div>
+      )}
+      
+      <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 max-w-md w-full border border-white/50">
+        {/* Help Button */}
+        <button 
+          onClick={() => setShowHelp(true)}
+          className="absolute top-4 right-4 w-8 h-8 bg-stone-100 hover:bg-stone-200 rounded-full text-stone-500 hover:text-stone-700 flex items-center justify-center text-sm font-bold transition-all"
+          title="How to use"
+        >
+          ?
+        </button>
+        
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex justify-center gap-3 mb-4">
-            <span className="text-4xl">🎨</span>
-            <span className="text-4xl">🖌️</span>
+          <div className="flex justify-center gap-2 mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-2xl shadow-lg">🎨</div>
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center text-2xl shadow-lg">🖌️</div>
           </div>
-          <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 mb-2">
+          <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 mb-1">
             Paint & Chat
           </h1>
-          <p className="text-stone-500">Draw together with friends!</p>
-          {!isConnected && (
-            <div className="mt-3 flex flex-col items-center gap-2">
-              <div className="inline-flex items-center gap-2 text-amber-600 text-sm bg-amber-50 px-4 py-2 rounded-full">
-                <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
-                Connecting to server...
+          <p className="text-stone-500 text-sm">Create art together in real-time</p>
+          
+          {/* Connection Status */}
+          <div className="mt-4">
+            {!isConnected ? (
+              <div className="inline-flex items-center gap-2 text-amber-600 text-xs bg-amber-50 px-3 py-1.5 rounded-full border border-amber-200">
+                <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+                Connecting...
+                <button onClick={() => socket.connect()} className="text-amber-700 underline ml-1">Retry</button>
               </div>
-              <button
-                onClick={() => socket.connect()}
-                className="text-xs text-stone-500 hover:text-stone-700 underline"
-              >
-                Retry connection
-              </button>
-            </div>
-          )}
-          {isConnected && (
-            <div className="mt-3 inline-flex items-center gap-2 text-emerald-600 text-sm bg-emerald-50 px-4 py-2 rounded-full">
-              <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-              Connected
-            </div>
-          )}
+            ) : (
+              <div className="inline-flex items-center gap-2 text-emerald-600 text-xs bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full" />
+                Ready to connect
+              </div>
+            )}
+          </div>
         </div>
 
         {mode === 'menu' && (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* Player Name Input */}
             <div>
-              <label className="text-sm font-bold text-stone-600 block mb-2">Your Name</label>
+              <label className="text-xs font-bold text-stone-500 uppercase tracking-wide block mb-2">Your Display Name</label>
               <input
                 type="text"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
                 placeholder="Enter your name..."
                 maxLength={20}
-                className="w-full px-4 py-3.5 border-2 border-stone-200 rounded-xl focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-100 text-lg font-medium text-stone-800 transition-all bg-stone-50/50"
+                className="w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-100 text-base font-medium text-stone-800 transition-all bg-white"
               />
             </div>
 
             {/* Action Buttons */}
-            <div className="space-y-3 pt-4">
+            <div className="space-y-3">
               <button
                 onClick={() => setMode('create')}
-                className="w-full py-4 px-6 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] flex items-center justify-center gap-3 group"
+                disabled={!isConnected}
+                className="w-full py-4 px-6 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                <span className="text-xl group-hover:scale-110 transition-transform">🎨</span>
-                Create Room
+                <span className="text-xl">✨</span>
+                Create New Room
               </button>
               
               <button
                 onClick={() => setMode('join')}
-                className="w-full py-4 px-6 bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-500 hover:to-indigo-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] flex items-center justify-center gap-3 group"
+                disabled={!isConnected}
+                className="w-full py-4 px-6 bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-500 hover:to-indigo-600 text-white rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                <span className="text-xl group-hover:scale-110 transition-transform">🔗</span>
-                Join Room
+                <span className="text-xl">🔗</span>
+                Join with Code
               </button>
             </div>
 
-            {/* Player color preview */}
-            <div className="flex items-center justify-center gap-6 pt-6 pb-2">
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg mx-auto mb-1 flex items-center justify-center text-2xl">🎨</div>
-                <span className="text-xs text-stone-500 font-medium">Left Player</span>
+            {/* Feature Cards */}
+            <div className="grid grid-cols-2 gap-3 pt-3">
+              <div className="bg-amber-50/80 rounded-xl p-3 border border-amber-100">
+                <div className="text-amber-500 text-lg mb-1">🎨</div>
+                <p className="text-xs font-semibold text-stone-700">10+ Brushes</p>
+                <p className="text-[10px] text-stone-500">Special effects included</p>
               </div>
-              <div className="text-stone-300">×</div>
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-400 to-indigo-500 shadow-lg mx-auto mb-1 flex items-center justify-center text-2xl">🖌️</div>
-                <span className="text-xs text-stone-500 font-medium">Right Player</span>
+              <div className="bg-sky-50/80 rounded-xl p-3 border border-sky-100">
+                <div className="text-sky-500 text-lg mb-1">🎮</div>
+                <p className="text-xs font-semibold text-stone-700">Mini Games</p>
+                <p className="text-[10px] text-stone-500">Play with your art</p>
+              </div>
+              <div className="bg-rose-50/80 rounded-xl p-3 border border-rose-100">
+                <div className="text-rose-500 text-lg mb-1">💬</div>
+                <p className="text-xs font-semibold text-stone-700">Live Chat</p>
+                <p className="text-[10px] text-stone-500">Talk while drawing</p>
+              </div>
+              <div className="bg-emerald-50/80 rounded-xl p-3 border border-emerald-100">
+                <div className="text-emerald-500 text-lg mb-1">🎵</div>
+                <p className="text-xs font-semibold text-stone-700">Background Music</p>
+                <p className="text-[10px] text-stone-500">Set the vibe</p>
               </div>
             </div>
 
-            {/* Info */}
-            <p className="text-center text-xs text-stone-400 pt-2">
-              Up to 4 players per room • Draw on your side!
+            {/* Player preview */}
+            <div className="flex items-center justify-center gap-6 pt-4 pb-2">
+              <div className="text-center">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-md mx-auto mb-1 flex items-center justify-center text-lg">🎨</div>
+                <span className="text-[10px] text-stone-400 font-medium">Left Side</span>
+              </div>
+              <div className="text-stone-300 text-xs">+</div>
+              <div className="text-center">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-indigo-500 shadow-md mx-auto mb-1 flex items-center justify-center text-lg">🖌️</div>
+                <span className="text-[10px] text-stone-400 font-medium">Right Side</span>
+              </div>
+            </div>
+            
+            <p className="text-center text-[10px] text-stone-400">
+              Up to 4 players • Real-time sync • Works on mobile
             </p>
           </div>
         )}
@@ -218,38 +306,39 @@ export default function RoomLobby({ onJoinRoom }) {
           <div className="space-y-4">
             <button
               onClick={() => { setMode('menu'); setError('') }}
-              className="text-stone-400 hover:text-stone-600 flex items-center gap-1 text-sm"
+              className="text-stone-400 hover:text-stone-600 flex items-center gap-1 text-sm font-medium"
             >
-              Back
+              <span>←</span> Back
             </button>
             
-            <div className="text-center py-4">
-              <h2 className="text-2xl font-bold text-stone-700">Create a Room</h2>
-              <p className="text-stone-500 text-sm mt-2">You will get a code to share with friends</p>
+            <div className="text-center py-2">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-2xl shadow-lg mx-auto mb-3">✨</div>
+              <h2 className="text-xl font-bold text-stone-800">Create a Room</h2>
+              <p className="text-stone-500 text-sm mt-1">Get a code to share with friends</p>
             </div>
 
             <div>
-              <label className="text-sm font-bold text-stone-600 block mb-2">Your Name</label>
+              <label className="text-xs font-bold text-stone-500 uppercase tracking-wide block mb-2">Your Name</label>
               <input
                 type="text"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
                 placeholder="Enter your name..."
                 maxLength={20}
-                className="w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200 text-lg font-medium text-stone-800 transition-all"
+                className="w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-100 text-base font-medium text-stone-800 transition-all bg-white"
               />
             </div>
 
             {error && (
-              <div className="text-red-500 text-sm text-center bg-red-50 rounded-lg p-2">
+              <div className="text-red-600 text-sm text-center bg-red-50 rounded-xl p-3 border border-red-100">
                 {error}
               </div>
             )}
 
             <button
               onClick={handleCreateRoom}
-              disabled={isLoading}
-              className="w-full py-4 px-6 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 hover:from-amber-500 hover:via-orange-600 hover:to-rose-600 text-white rounded-2xl font-bold text-lg shadow-lg transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+              disabled={isLoading || !isConnected}
+              className="w-full py-4 px-6 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white rounded-xl font-bold text-base shadow-lg transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -260,6 +349,10 @@ export default function RoomLobby({ onJoinRoom }) {
                 'Create Room'
               )}
             </button>
+            
+            <p className="text-center text-xs text-stone-400">
+              You'll be the room host (Left Side)
+            </p>
           </div>
         )}
 
@@ -267,50 +360,51 @@ export default function RoomLobby({ onJoinRoom }) {
           <div className="space-y-4">
             <button
               onClick={() => { setMode('menu'); setError('') }}
-              className="text-stone-400 hover:text-stone-600 flex items-center gap-1 text-sm"
+              className="text-stone-400 hover:text-stone-600 flex items-center gap-1 text-sm font-medium"
             >
-              Back
+              <span>←</span> Back
             </button>
             
-            <div className="text-center py-4">
-              <h2 className="text-2xl font-bold text-stone-700">Join a Room</h2>
-              <p className="text-stone-500 text-sm mt-2">Enter the code shared by your friend</p>
+            <div className="text-center py-2">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center text-2xl shadow-lg mx-auto mb-3">🔗</div>
+              <h2 className="text-xl font-bold text-stone-800">Join a Room</h2>
+              <p className="text-stone-500 text-sm mt-1">Enter the code from your friend</p>
             </div>
 
             <div>
-              <label className="text-sm font-bold text-stone-600 block mb-2">Your Name</label>
+              <label className="text-xs font-bold text-stone-500 uppercase tracking-wide block mb-2">Your Name</label>
               <input
                 type="text"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
                 placeholder="Enter your name..."
                 maxLength={20}
-                className="w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200 text-lg font-medium text-stone-800 transition-all"
+                className="w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-100 text-base font-medium text-stone-800 transition-all bg-white"
               />
             </div>
 
             <div>
-              <label className="text-sm font-bold text-stone-600 block mb-2">Room Code</label>
+              <label className="text-xs font-bold text-stone-500 uppercase tracking-wide block mb-2">Room Code</label>
               <input
                 type="text"
                 value={roomCode}
                 onChange={(e) => setRoomCode(e.target.value.toUpperCase().slice(0, 6))}
-                placeholder="ABCD12"
+                placeholder="ABC123"
                 maxLength={6}
-                className="w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 text-2xl font-mono font-bold text-center tracking-widest uppercase text-stone-800 transition-all"
+                className="w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-sky-400 focus:outline-none focus:ring-4 focus:ring-sky-100 text-2xl font-mono font-bold text-center tracking-[0.3em] uppercase text-stone-800 transition-all bg-white"
               />
             </div>
 
             {error && (
-              <div className="text-red-500 text-sm text-center bg-red-50 rounded-lg p-2">
+              <div className="text-red-600 text-sm text-center bg-red-50 rounded-xl p-3 border border-red-100">
                 {error}
               </div>
             )}
 
             <button
               onClick={handleJoinRoom}
-              disabled={isLoading}
-              className="w-full py-4 px-6 bg-gradient-to-r from-sky-400 via-indigo-500 to-purple-500 hover:from-sky-500 hover:via-indigo-600 hover:to-purple-600 text-white rounded-2xl font-bold text-lg shadow-lg transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+              disabled={isLoading || !isConnected}
+              className="w-full py-4 px-6 bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-500 hover:to-indigo-600 text-white rounded-xl font-bold text-base shadow-lg transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -321,6 +415,10 @@ export default function RoomLobby({ onJoinRoom }) {
                 'Join Room'
               )}
             </button>
+            
+            <p className="text-center text-xs text-stone-400">
+              You'll join as a guest (Right Side)
+            </p>
           </div>
         )}
       </div>

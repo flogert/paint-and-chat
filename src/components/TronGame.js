@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import socket from '@/lib/socket'
 
-export default function TronGame({ onClose, playerSide, leftImage, rightImage }) {
+export default function TronGame({ onClose, playerSide, leftImage, rightImage, onGameWin }) {
   const canvasRef = useRef(null)
   const [winner, setWinner] = useState(null)
   const [message, setMessage] = useState("Get Ready!")
@@ -78,6 +78,7 @@ export default function TronGame({ onClose, playerSide, leftImage, rightImage })
            setMessage("CRASH! You Lost!")
        } else {
            setMessage("VICTORY! Opponent Crashed!")
+           onGameWin && onGameWin(10)
        }
     }
 

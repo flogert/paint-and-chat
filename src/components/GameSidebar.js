@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import sounds from '@/lib/sounds'
 import { SHOP_ITEMS } from '@/lib/shopItems'
+import GuideOverlay from './GuideOverlay'
 
 const ALL_PROMPTS = [
   "A penguin ordering coffee", "A cat interviewing for a job", "A dog driving a sports car",
@@ -66,7 +67,8 @@ export default function GameSidebar({
   pongReady, 
   tronReady, 
   galagaReady, 
-  pacmanReady 
+  pacmanReady,
+  onOpenGuide
 }) {
   const [currentPrompt, setCurrentPrompt] = useState('')
   const [timeLeft, setTimeLeft] = useState(0)
@@ -158,35 +160,124 @@ export default function GameSidebar({
     return () => clearInterval(interval)
   }, [isActive, timeLeft, gameMode])
 
+  const showGameGuide = (gameId) => {
+    const guides = {
+      pong: {
+        title: "🏓 Pong Guide",
+        content: (
+          <div className="space-y-3">
+            <p>Classic paddle battle! Don't let the ball pass you.</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><strong>Controls:</strong> Up/Down Arrows or W/S keys</li>
+              <li>First to 10 points wins!</li>
+              <li>Tip: Hit the ball with the edge of your paddle for sharp angles.</li>
+            </ul>
+          </div>
+        )
+      },
+      tron: {
+        title: "🏍️ Neon Racer Guide",
+        content: (
+          <div className="space-y-3">
+            <p>Leave a light trail and trap your opponent!</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><strong>Controls:</strong> Arrow keys to turn</li>
+              <li>Don't hit walls or any light trails (including your own!)</li>
+              <li>Last racer surviving wins the round.</li>
+            </ul>
+          </div>
+        )
+      },
+      galaga: {
+        title: "🚀 Space Defender Guide",
+        content: (
+          <div className="space-y-3">
+            <p>Defend the galaxy from alien invaders!</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><strong>Move:</strong> Left/Right Arrows</li>
+              <li><strong>Shoot:</strong> Spacebar</li>
+              <li>Score points by hitting enemies. Watch out for enemy fire!</li>
+            </ul>
+          </div>
+        )
+      },
+      pacman: {
+        title: "👾 Maze Master Guide",
+        content: (
+          <div className="space-y-3">
+            <p>Eat all the pellets in the maze!</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><strong>Move:</strong> Arrow keys</li>
+              <li>Collect power pellets to eat ghosts!</li>
+              <li>Highest score when time runs out wins.</li>
+            </ul>
+          </div>
+        )
+      },
+      general: {
+        title: "ℹ️ Help & Controls",
+        content: (
+          <div className="space-y-4 text-sm">
+             <div>
+               <h4 className="font-bold text-amber-600 mb-2">Keyboard Shortcuts</h4>
+               <div className="grid grid-cols-2 gap-2 text-xs">
+                 <div className="bg-stone-50 p-2 rounded"><strong>B</strong> - Brush</div>
+                 <div className="bg-stone-50 p-2 rounded"><strong>E</strong> - Eraser</div>
+                 <div className="bg-stone-50 p-2 rounded"><strong>P</strong> - Pencil</div>
+                 <div className="bg-stone-50 p-2 rounded"><strong>F</strong> - Fill Bucket</div>
+                 <div className="bg-stone-50 p-2 rounded"><strong>L</strong> - Line Tool</div>
+                 <div className="bg-stone-50 p-2 rounded"><strong>Ctrl+Z</strong> - Undo</div>
+               </div>
+             </div>
+             
+             <div>
+               <h4 className="font-bold text-amber-600 mb-2">Game Modes</h4>
+               <ul className="list-disc pl-5 space-y-1 text-xs text-stone-600">
+                  <li><strong>Classic:</strong> Standard 60 second rounds</li>
+                  <li><strong>Speed:</strong> Fast-paced 30 second rounds</li>
+                  <li><strong>Zen:</strong> No timer, just relax and draw</li>
+                  <li><strong>Blind:</strong> The prompt fades away!</li>
+               </ul>
+             </div>
+          </div>
+        )
+      }
+    }
+    
+    if (guides[gameId] && onOpenGuide) {
+      onOpenGuide(guides[gameId])
+    }
+  }
+
   return (
     <div className={`${className} flex flex-col z-30`}>
       {/* Room Info Header - Warm Theme */}
       {roomInfo && (
-        <div className="px-4 py-3 bg-gradient-to-r from-amber-100 to-orange-100 border-b border-amber-200/80">
+        <div className="px-3 py-2.5 bg-gradient-to-r from-amber-50/90 to-orange-50/70 border-b border-amber-200/60">
           <div className="flex items-center justify-between mb-2">
             <button
               onClick={onLeaveRoom}
-              className="text-xs text-stone-500 hover:text-red-500 hover:bg-red-50 px-2 py-1 rounded-lg transition-all flex items-center gap-1"
+              className="text-[11px] text-stone-500 hover:text-red-500 hover:bg-red-50 px-2 py-1 rounded-lg transition-all flex items-center gap-1 font-medium"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
               Leave
             </button>
             <button
               onClick={onCopyCode}
-              className="font-mono font-bold text-sm bg-white/80 px-3 py-1.5 rounded-xl border-2 border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400 flex items-center gap-2 shadow-sm transition-all"
-              title="Click to copy"
+              className="font-mono font-bold text-xs bg-white/90 px-2.5 py-1.5 rounded-lg border border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400 flex items-center gap-1.5 shadow-sm transition-all"
+              title="Click to copy room code"
             >
-              <span className="text-base">🔗</span> {roomInfo.roomCode}
+              <span className="text-sm">🔗</span> {roomInfo.roomCode}
             </button>
           </div>
           
           {/* Players List */}
-          <div className="flex items-center justify-between bg-white/60 rounded-xl px-3 py-2">
+          <div className="flex items-center justify-between bg-white/70 rounded-lg px-2.5 py-1.5">
             <div className="flex items-center gap-1">
               {roomInfo.players?.map((player) => (
                 <div
                   key={player.id}
-                  className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-[10px] font-bold shadow-sm ${
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-[9px] font-bold shadow-sm ${
                     player.side === 'left' 
                       ? 'bg-gradient-to-br from-amber-100 to-orange-100 border-amber-400 text-amber-700' 
                       : 'bg-gradient-to-br from-sky-100 to-indigo-100 border-sky-400 text-sky-700'
@@ -196,9 +287,9 @@ export default function GameSidebar({
                   {player.name.charAt(0).toUpperCase()}
                 </div>
               ))}
-              <span className="ml-2 text-xs text-stone-500 font-medium">{roomInfo.players?.length}/4 players</span>
+              <span className="ml-1.5 text-[10px] text-stone-500 font-medium">{roomInfo.players?.length}/4</span>
             </div>
-            <span className={`text-xs font-bold px-3 py-1 rounded-full shadow-sm ${
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm ${
               roomInfo.side === 'left' 
                 ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white' 
                 : 'bg-gradient-to-r from-sky-400 to-indigo-400 text-white'
@@ -210,22 +301,22 @@ export default function GameSidebar({
       )}
 
       {/* Tab Switcher */}
-      <div className="px-3 py-3 border-b border-amber-200/50 bg-white/80 flex gap-2 shrink-0">
-         <button onClick={() => setActiveTab('play')} className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'play' ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg scale-[1.02]' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}>
-           <span>🎮</span> Play
+      <div className="px-3 py-2 border-b border-amber-100/60 bg-white/40 flex gap-1.5 shrink-0">
+         <button onClick={() => setActiveTab('play')} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${activeTab === 'play' ? 'bg-amber-100 text-amber-800 shadow-sm' : 'bg-transparent text-stone-500 hover:bg-stone-100'}`}>
+           <span>🎨</span> Play
          </button>
-         <button onClick={() => setActiveTab('shop')} className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'shop' ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg scale-[1.02]' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}>
+         <button onClick={() => setActiveTab('shop')} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${activeTab === 'shop' ? 'bg-indigo-100 text-indigo-800 shadow-sm' : 'bg-transparent text-stone-500 hover:bg-stone-100'}`}>
            <span>🛒</span> Shop
          </button>
       </div>
       
-      <div className="flex-1 p-3 space-y-4 flex flex-col overflow-hidden overflow-y-auto custom-scrollbar">
+      <div className="flex-1 p-2.5 space-y-3 flex flex-col overflow-hidden overflow-y-auto custom-scrollbar">
           {activeTab === 'shop' ? (
-              <div className="space-y-4 pb-10">
+              <div className="space-y-3 pb-8">
                  {/* Coins Balance Card */}
-                 <div className="bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 rounded-2xl p-5 text-white shadow-xl relative overflow-hidden">
-                    <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-                    <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+                 <div className="bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 rounded-xl p-4 text-white shadow-lg relative overflow-hidden">
+                    <div className="absolute -top-6 -right-6 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+                    <div className="absolute -bottom-3 -left-3 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
                     <div className="relative z-10 flex flex-col items-center">
                        <div className="text-xs font-bold uppercase opacity-80 mb-1 tracking-wider">💰 Your Balance</div>
                        <div className="text-5xl font-black tracking-tight mt-1">{coins?.toLocaleString() || 0}</div>
@@ -268,51 +359,58 @@ export default function GameSidebar({
             <>
         
         {/* SECTION: STATS */}
-        <div className="space-y-1">
-          <h3 className="text-[10px] font-bold text-amber-700/70 uppercase tracking-wider px-1">📊 Stats</h3>
-          <div className="flex justify-center gap-3 py-1.5 px-3 bg-white rounded-lg border border-amber-200">
+        <details className="group" open>
+          <summary className="flex items-center gap-1.5 text-[10px] font-bold text-amber-700/80 uppercase tracking-wider px-1 cursor-pointer list-none select-none hover:text-amber-800">
+            <span className="text-xs transition-transform group-open:rotate-90">▶</span>
+            📊 Stats
+          </summary>
+          <div className="mt-1.5 flex justify-center gap-2 py-1.5 px-2 bg-white rounded-lg border border-amber-100">
             <div className="text-center">
-              <div className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500">{score}</div>
-              <div className="text-[8px] uppercase text-stone-500 font-bold">Points</div>
+              <div className="text-base font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500">{score}</div>
+              <div className="text-[8px] uppercase text-stone-400 font-bold">Points</div>
             </div>
-            <div className="w-px bg-stone-200"></div>
+            <div className="w-px bg-stone-100"></div>
             <div className="text-center">
-              <div className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500 flex items-center gap-0.5">
+              <div className="text-base font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500 flex items-center gap-0.5">
                 🔥 {streak}
               </div>
-              <div className="text-[8px] uppercase text-stone-500 font-bold">Streak</div>
+              <div className="text-[8px] uppercase text-stone-400 font-bold">Streak</div>
             </div>
-            {showConfetti && <span className="text-lg animate-bounce">🎉</span>}
+            {showConfetti && <span className="text-base animate-bounce">🎉</span>}
           </div>
-        </div>
+        </details>
 
         {/* SECTION: DRAWING MODES */}
-        <div className="space-y-1">
-          <h3 className="text-[10px] font-bold text-amber-700/70 uppercase tracking-wider px-1">🎯 Modes</h3>
-          <div className="grid grid-cols-4 gap-1">
-            {[
-              { id: 'classic', icon: '⏱️', label: 'Classic' }, 
-              { id: 'speed', icon: '⚡', label: 'Speed' },
-              { id: 'zen', icon: '🧘', label: 'Zen' }, 
-              { id: 'blind', icon: '🙈', label: 'Blind' },
-              { id: 'relay', icon: '🏃', label: 'Relay' }, 
-              { id: 'battle', icon: '⚔️', label: 'Battle' },
-              { id: 'backwards', icon: '⏪', label: 'Rewind' },
-            ].map(mode => (
-              <button 
-                key={mode.id}
-                onClick={() => setGameMode(mode.id)}
-                className={`py-1.5 text-base rounded-lg border transition-all ${
-                  gameMode === mode.id 
-                    ? 'bg-gradient-to-br from-amber-100 to-orange-100 border-amber-400 shadow-sm scale-105' 
-                    : 'bg-white border-stone-100 hover:border-amber-300'
-                }`}
-                title={mode.label}
-              >
-                {mode.icon}
-              </button>
-            ))}
-          </div>
+        <details className="group" open>
+          <summary className="flex items-center gap-1.5 text-[10px] font-bold text-amber-700/80 uppercase tracking-wider px-1 cursor-pointer list-none select-none hover:text-amber-800">
+            <span className="text-xs transition-transform group-open:rotate-90">▶</span>
+            🎯 Game Modes
+          </summary>
+          <div className="mt-1.5 space-y-1.5">
+            <div className="grid grid-cols-4 gap-1">
+              {[
+                { id: 'classic', icon: '⏱️', label: 'Classic' }, 
+                { id: 'speed', icon: '⚡', label: 'Speed' },
+                { id: 'zen', icon: '🧘', label: 'Zen' }, 
+                { id: 'blind', icon: '🙈', label: 'Blind' },
+                { id: 'relay', icon: '🏃', label: 'Relay' }, 
+                { id: 'battle', icon: '⚔️', label: 'Battle' },
+                { id: 'backwards', icon: '⏪', label: 'Rewind' },
+              ].map(mode => (
+                <button 
+                  key={mode.id}
+                  onClick={() => setGameMode(mode.id)}
+                  className={`py-1 text-sm rounded-lg border transition-all ${
+                    gameMode === mode.id 
+                      ? 'bg-gradient-to-br from-amber-100 to-orange-100 border-amber-400 shadow-sm scale-105' 
+                      : 'bg-white border-stone-100 hover:border-amber-300'
+                  }`}
+                  title={mode.label}
+                >
+                  {mode.icon}
+                </button>
+              ))}
+            </div>
 
           <div className="relative" ref={dropdownRef}>
             <button
@@ -352,15 +450,17 @@ export default function GameSidebar({
               </div>
             )}
           </div>
-        </div>
+          </div>
+        </details>
 
         {/* SECTION: ROUND */}
-        <div className="space-y-1">
-           <h3 className="text-[10px] font-bold text-amber-800/60 uppercase tracking-wider px-1">Current Round</h3>
-           <div className={`p-2 bg-gradient-to-br from-white to-amber-50 rounded-xl border-2 border-amber-200/50 shadow-sm ${gameMode === 'blind' && isActive ? 'blur-lg select-none' : ''}`}>
-            <div className="text-[8px] font-bold text-amber-500 uppercase tracking-wide mb-0.5 text-center">✏️ Draw This</div>
-            <p className="text-sm font-black text-stone-800 text-center leading-tight min-h-[2rem] flex items-center justify-center">
-              {currentPrompt || "🎨 Start!"}
+        <div className="space-y-1.5">
+           <h3 className="text-[10px] font-bold text-amber-800/70 uppercase tracking-wider px-1 flex items-center gap-1">
+             ✏️ Current Round
+           </h3>
+           <div className={`p-2 bg-gradient-to-br from-white to-amber-50/50 rounded-lg border border-amber-200/50 shadow-sm ${gameMode === 'blind' && isActive ? 'blur-lg select-none' : ''}`}>
+            <p className="text-sm font-bold text-stone-800 text-center leading-tight min-h-[1.75rem] flex items-center justify-center">
+              {currentPrompt || "🎨 Press Start!"}
             </p>
             {challengeMode && isActive && (
               <div className="mt-1 pt-1 border-t border-amber-200/50 text-center">
@@ -373,7 +473,7 @@ export default function GameSidebar({
 
           {/* Timer */}
           {isActive && gameMode !== 'zen' && (
-            <div className={`text-3xl font-black tabular-nums text-center py-1.5 rounded-lg ${
+            <div className={`text-2xl font-black tabular-nums text-center py-1 rounded-lg ${
               timeLeft < 10 ? 'text-red-500 animate-pulse bg-red-50' 
               : timeLeft < 20 ? 'text-orange-500 bg-orange-50' 
               : 'text-amber-500 bg-amber-50/50'
@@ -386,7 +486,7 @@ export default function GameSidebar({
           <div className="flex gap-1">
             <button 
               onClick={generatePrompt}
-              className="flex-1 py-2 px-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg font-bold shadow-lg text-xs flex items-center justify-center gap-1"
+              className="flex-1 py-1.5 px-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg font-bold shadow-md text-xs flex items-center justify-center gap-1"
             >
               🎲 {currentPrompt ? "New" : "Start!"}
             </button>
@@ -394,14 +494,14 @@ export default function GameSidebar({
               <>
                 <button 
                   onClick={completeRound}
-                  className="py-2 px-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold shadow text-sm"
+                  className="py-1.5 px-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold shadow text-xs"
                   title="Done!"
                 >
                   ✓
                 </button>
                 <button 
                   onClick={skipRound}
-                  className="py-2 px-2 bg-stone-300 hover:bg-stone-400 text-stone-600 rounded-lg font-bold text-sm"
+                  className="py-1.5 px-2 bg-stone-300 hover:bg-stone-400 text-stone-600 rounded-lg font-bold text-xs"
                   title="Skip"
                 >
                   ⏭️
@@ -412,10 +512,13 @@ export default function GameSidebar({
         </div>
 
         {/* SECTION: MINIGAMES */}
-        <div className="space-y-1">
-          <h3 className="text-[10px] font-bold text-amber-800/60 uppercase tracking-wider px-1">Minigames</h3>
+        <details className="group" open>
+          <summary className="flex items-center gap-1.5 text-[10px] font-bold text-amber-700/80 uppercase tracking-wider px-1 cursor-pointer list-none select-none hover:text-amber-800">
+            <span className="text-xs transition-transform group-open:rotate-90">▶</span>
+            🕹️ Minigames
+          </summary>
           
-          <div className="p-1.5 bg-stone-50/50 rounded-lg border border-stone-200/60">
+          <div className="mt-1.5 p-1.5 bg-stone-50/50 rounded-lg border border-stone-100">
             {setupMode ? (
                <div className="bg-white rounded-lg p-1.5 border border-indigo-100 shadow-sm animate-fade-in relative">
                   <button 
@@ -461,62 +564,43 @@ export default function GameSidebar({
                   { id: 'galaga', icon: '🚀', label: 'Space', color: 'text-purple-600', bg: 'bg-purple-50 hover:bg-purple-100', border: 'border-purple-200' },
                   { id: 'pacman', icon: '👾', label: 'Maze', color: 'text-amber-600', bg: 'bg-amber-50 hover:bg-amber-100', border: 'border-amber-200' }
                 ].map(game => (
-                  <button
-                    key={game.id}
-                    disabled={roomInfo?.players?.length < 2}
-                    title={roomInfo?.players?.length < 2 ? "Need 2 players" : `Play ${game.label}`}
-                    onClick={() => setSetupMode(game.id)}
-                    className={`
-                      relative group py-1.5 px-1 rounded border transition-all
-                      flex flex-col items-center justify-center
-                      ${roomInfo?.players?.length < 2 
-                        ? 'bg-stone-50 border-stone-100 opacity-50 cursor-not-allowed grayscale' 
-                        : `${game.bg} ${game.border} hover:scale-105`
-                      }
-                    `}
-                  >
-                    <span className="text-base">{game.icon}</span>
-                    <span className={`text-[7px] font-bold ${roomInfo?.players?.length < 2 ? 'text-stone-400' : game.color}`}>{game.label}</span>
-                  </button>
+                  <div key={game.id} className="relative group">
+                    <button
+                      disabled={roomInfo?.players?.length < 2}
+                      onClick={() => setSetupMode(game.id)}
+                      className={`
+                        w-full py-1 px-1 rounded-lg border transition-all
+                        flex flex-col items-center justify-center
+                        ${roomInfo?.players?.length < 2 
+                          ? 'bg-stone-50 border-stone-100 opacity-50 cursor-not-allowed grayscale' 
+                          : `${game.bg} ${game.border} hover:scale-105`
+                        }
+                      `}
+                    >
+                      <span className="text-sm">{game.icon}</span>
+                      <span className={`text-[7px] font-bold ${roomInfo?.players?.length < 2 ? 'text-stone-400' : game.color}`}>{game.label}</span>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); showGameGuide(game.id) }}
+                      className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-stone-200 text-stone-600 rounded-full text-[7px] flex items-center justify-center hover:bg-stone-300 font-bold shadow-sm z-10"
+                      title="How to play"
+                    >
+                      ?
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
           </div>
-        </div>
-
-        {/* Help */}
-        <details className="mt-auto text-[9px]">
-          <summary className="font-medium text-stone-500 cursor-pointer hover:text-stone-700">ℹ️ Help & Keys</summary>
-          <div className="text-stone-500 space-y-1 pt-1 text-[8px] overflow-y-auto max-h-32">
-            <div>
-              <strong className="block text-indigo-500">Modes:</strong>
-              Classic: 60s Timer <br/>
-              Speed: 30s Timer <br/>
-              Zen: No Timer (Relax) <br/>
-              Blind: Prompt fades <br/>
-              Relay: 20s fast rounds <br/>
-              Battle: 40s head-to-head <br/>
-              Rewind: Only 10s!
-            </div>
-            
-            <div className="pt-1 border-t border-stone-200">
-              <strong className="block text-indigo-500">Shortcuts:</strong>
-              <div className="grid grid-cols-2 gap-x-1">
-                <span><kbd className="bg-stone-200 rounded px-0.5">B</kbd>rush</span>
-                <span><kbd className="bg-stone-200 rounded px-0.5">E</kbd>raser</span>
-                <span><kbd className="bg-stone-200 rounded px-0.5">P</kbd>encil</span>
-                <span><kbd className="bg-stone-200 rounded px-0.5">S</kbd>pray</span>
-                <span><kbd className="bg-stone-200 rounded px-0.5">F</kbd>ill</span>
-                <span><kbd className="bg-stone-200 rounded px-0.5">L</kbd>ine</span>
-                <span><kbd className="bg-stone-200 rounded px-0.5">O</kbd>Circle</span>
-                <span><kbd className="bg-stone-200 rounded px-0.5">T</kbd>Tri</span>
-                <span><kbd className="bg-stone-200 rounded px-0.5">I</kbd>Pick</span>
-                <span><kbd className="bg-stone-200 rounded px-0.5">M</kbd>arker</span>
-                <span className="col-span-2"><kbd className="bg-stone-200 rounded px-0.5">Ctrl+Z</kbd> Undo</span>
-              </div>
-            </div>
-          </div>
         </details>
+
+        {/* Help Button */}
+        <button 
+           onClick={() => showGameGuide('general')}
+           className="mt-auto flex items-center justify-center gap-1.5 text-[11px] font-medium text-stone-400 hover:text-amber-600 hover:bg-amber-50 py-2 rounded-lg transition-all border border-transparent hover:border-amber-200"
+        >
+           <span>ℹ️</span> Help & Shortcuts
+        </button>
         </>
       )}
       </div>

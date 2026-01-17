@@ -14,16 +14,26 @@ import sounds from '@/lib/sounds'
 import gifRecorder from '@/lib/gifRecorder'
 import socket from '@/lib/socket'
 import CursorOverlay from '@/components/CursorOverlay'
+import GuideOverlay from '@/components/GuideOverlay'
 import { SHOP_ITEMS } from '@/lib/shopItems'
+import confetti from 'canvas-confetti'
 
 export default function Home() {
   // Room state
   const [inRoom, setInRoom] = useState(false)
   const [roomInfo, setRoomInfo] = useState(null) // { roomCode, playerNumber, playerName, players, side }
-  const [coins, setCoins] = useState(50) // Start with 50 coins
-  const [unlockedItems, setUnlockedItems] = useState(['wobbly']) // First one free
+  const [coins, setCoins] = useState(1000) // Start with more coins
+  // All special brushes unlocked by default
+  const [unlockedItems, setUnlockedItems] = useState(['wobbly', 'rainbow', 'mirror', 'zigzag', 'glow', 'pixel', 'scatter', 'gravity', 'neon', 'disco'])
+
+  const [guideState, setGuideState] = useState({ show: false, content: null })
+
+  const openGuide = (content) => {
+    setGuideState({ show: true, content })
+  }
 
   const handlePurchase = (itemId, price) => {
+    // Items are unlocked but keeping logic for future
     if (coins >= price && !unlockedItems.includes(itemId)) {
       setCoins(prev => prev - price)
       setUnlockedItems(prev => [...prev, itemId])
@@ -35,8 +45,48 @@ export default function Home() {
 
   const handleGameWin = (amount) => {
       setCoins(prev => prev + amount)
-      // Visual feedback could be added here
       sounds.success()
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      })
+  }
+  
+  const sendLove = () => {
+    if (roomInfo?.roomCode) {
+       socket.emit('send-love', { roomCode: roomInfo.roomCode })
+       // Optimistic local confetti
+       triggerLoveEffect()
+    }
+  }
+
+  const triggerLoveEffect = () => {
+      sounds.success()
+      const duration = 3000
+      const end = Date.now() + duration
+
+      const frame = () => {
+         confetti({
+            particleCount: 2,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: ['#ff0000', '#ff69b4']
+         })
+         confetti({
+            particleCount: 2,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: ['#ff0000', '#ff69b4']
+         })
+
+         if (Date.now() < end) {
+            requestAnimationFrame(frame)
+         }
+      }
+      frame()
   }
   
   // Left player (Player 1) brush settings
@@ -273,8 +323,12 @@ export default function Home() {
     setPacmanReady(true)
     socket.emit('pacman-ready', { side: roomInfo.side, pacmanImage })
     setMessages(prev => [...prev, { sender: '🎮 System', text: "You are ready for Maze Master! Waiting for partner..." }])
-  }
-
+  }  
+  // Listen for love efffect
+  useEffect(() => {
+    socket.on('receive-love', triggerLoveEffect)
+    return () => socket.off('receive-love', triggerLoveEffect)
+  }, [])
   const prepareGalaga = () => {
     if (!roomInfo || !canvasLogicRef.current) return
     
@@ -536,50 +590,76 @@ export default function Home() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [activePlayer, isRecording, startRecording, stopRecording])
 
+  // Prevent pull-to-refresh and scroll on mobile
+  useEffect(() => {
+    const preventScroll = (e) => {
+      // Allow scrolling in chat sidebar and inputs
+      if (e.target.closest('.custom-scrollbar') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return
+      }
+      e.preventDefault()
+    }
+    
+    document.addEventListener('touchmove', preventScroll, { passive: false })
+    return () => document.removeEventListener('touchmove', preventScroll)
+  }, [])
+
   // Show room lobby if not in a room
   if (!inRoom) {
     return <RoomLobby onJoinRoom={handleJoinRoom} />
   }
 
   return (
-    <main ref={mainContainerRef} className="w-screen h-screen flex flex-col bg-gradient-to-br from-stone-100 via-stone-50 to-stone-100 overflow-hidden relative touch-none">
+    <main 
+      ref={mainContainerRef} 
+      className="w-screen h-[100dvh] flex flex-col bg-gradient-to-br from-stone-50 via-amber-50/30 to-sky-50/30 overflow-hidden relative select-none"
+      style={{ touchAction: 'none', overscrollBehavior: 'none' }}
+    >
       <CursorOverlay socket={socket} roomInfo={roomInfo} containerRef={mainContainerRef} />
 
       {/* Room Code Popup for host */}
       {showRoomCode && roomInfo?.playerNumber === 1 && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-stone-200 p-8 z-50 animate-fade-in">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-stone-200 p-6 z-50 animate-fade-in">
           <div className="text-center">
-            <div className="text-4xl mb-3">🔗</div>
-            <p className="text-sm text-stone-500 mb-3 font-medium">Share this code with friends!</p>
+            <div className="text-3xl mb-2">🔗</div>
+            <p className="text-xs text-stone-500 mb-3 font-medium">Share this code with friends!</p>
             <button 
               onClick={copyRoomCode}
-              className="font-mono font-black text-4xl text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500 bg-gradient-to-r from-amber-50 to-orange-50 px-8 py-4 rounded-2xl hover:from-amber-100 hover:to-orange-100 transition-all border-2 border-amber-200 shadow-inner"
+              className="font-mono font-black text-3xl text-amber-600 bg-amber-50 px-6 py-3 rounded-xl hover:bg-amber-100 transition-all border-2 border-amber-200 shadow-inner"
             >
               {roomInfo.roomCode}
             </button>
-            <p className="text-xs text-stone-400 mt-3 flex items-center justify-center gap-2">
+            <p className="text-[10px] text-stone-400 mt-2 flex items-center justify-center gap-1">
               <span>📋</span> Click to copy
             </p>
           </div>
           <button
             onClick={() => setShowRoomCode(false)}
-            className="absolute -top-2 -right-2 w-8 h-8 bg-stone-100 hover:bg-stone-200 rounded-full text-stone-500 flex items-center justify-center text-lg shadow-md transition-all"
+            className="absolute -top-2 -right-2 w-7 h-7 bg-stone-100 hover:bg-stone-200 rounded-full text-stone-500 flex items-center justify-center text-lg shadow-md transition-all"
           >
             ×
           </button>
         </div>
       )}
-      
-      {/* Top Bar REMOVED - Moved to Sidebar */}
     
+      {/* Guide Overlay - Rendered at root to avoid clipping */}
+      {guideState.show && (
+          <GuideOverlay 
+            title={guideState.content?.title} 
+            content={guideState.content?.content} 
+            onClose={() => setGuideState({ show: false, content: null })} 
+          />
+      )}
+
       {/* Main Layout */}
       <div className="flex flex-1 relative overflow-hidden">
         {/* Game Sidebar - Left Player Theme (Warm) */}
-        <GameSidebar
+        {!bossMode && (
+          <GameSidebar
           className={`
-            fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-amber-50 via-orange-50/80 to-amber-50 shadow-2xl transform transition-transform duration-300 ease-in-out z-30 sidebar-glass
+            fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-amber-50 via-orange-50/80 to-amber-50 shadow-xl transform transition-transform duration-300 ease-in-out z-30
             ${isGameOpen ? 'translate-x-0' : '-translate-x-full'}
-            md:relative md:translate-x-0 md:w-72 md:shadow-xl md:border-r-2 md:border-amber-200/50
+            md:relative md:translate-x-0 md:w-64 lg:w-72 md:shadow-lg md:border-r md:border-amber-200/50
           `}
           roomInfo={roomInfo}
           coins={coins}
@@ -595,53 +675,90 @@ export default function Home() {
           tronReady={tronReady}
           galagaReady={galagaReady}
           pacmanReady={pacmanReady}
+          onOpenGuide={openGuide}
         />
-
-        {/* Pong Game Overlay */}
-        <PongGame
-          isActive={pongActive}
-          playerSide={roomInfo?.side}
-          onClose={handleClosePong}
-          leftPaddleImage={pongPaddles.left}
-          rightPaddleImage={pongPaddles.right}
-        />
-
-        {/* Tron Game Overlay */}
-        {tronActive && (
-          <TronGame
-            playerSide={roomInfo.side}
-            onClose={() => setTronActive(false)}
-            leftImage={tronImages?.left}
-            rightImage={tronImages?.right}
-          />
         )}
 
-        {/* Pacman Game Overlay */}
-        {pacmanActive && (
-          <PacmanGame
-             side={roomInfo.side}
-             onClose={() => setPacmanActive(false)}
-             leftPacmanImage={pacmanImages?.left}
-             rightPacmanImage={pacmanImages?.right}
-          />
-        )}
+        {/* Canvas Area - Fixed, Non-Scrollable */}
+        <div className="flex-1 relative bg-gradient-to-br from-orange-100 to-sky-100">
+          {/* Canvas Container */}
+          <div className="absolute inset-0 p-2 md:p-3">
+            <div className="relative w-full h-full"> 
+               {/* 1. Clipped Canvas Area */}
+               <div className="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 overflow-hidden">
+              {/* Canvas Divider Line */}
+              <div className="canvas-divider" />
+              
+              {/* Player Labels */}
+              <div className="absolute top-14 left-3 z-10 pointer-events-none">
+                <span className="player-badge player-badge-left text-[10px]">
+                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                  {roomInfo?.side === 'left' ? 'You' : 'Partner'}
+                </span>
+              </div>
+              <div className="absolute top-14 right-3 z-10 pointer-events-none">
+                <span className="player-badge player-badge-right text-[10px]">
+                  <span className="w-2 h-2 rounded-full bg-sky-500"></span>
+                  {roomInfo?.side === 'right' ? 'You' : 'Partner'}
+                </span>
+              </div>
+              
+              {/* Background Canvas */}
+               <Canvas
+                ref={canvasLogicRef}
+                canvasRef={canvasRef}
+                leftBrushColor={leftBrushColor}
+                leftBrushSize={leftBrushSize}
+                leftBrushStyle={leftBrushStyle}
+                leftBrushOpacity={leftBrushOpacity}
+                leftCurrentTool={leftCurrentTool}
+                leftWobblyMode={leftWobblyMode}
+                leftRandomColorMode={leftRandomColorMode}
+                leftMirrorMode={leftMirrorMode}
+                leftGlowMode={leftGlowMode}
+                leftScatterMode={leftScatterMode}
+                leftNeonMode={leftNeonMode}
+                leftDiscoMode={leftDiscoMode}
+                leftGravityMode={leftGravityMode}
+                leftZigzagMode={leftZigzagMode}
+                leftPixelMode={leftPixelMode}
+                rightBrushColor={rightBrushColor}
+                rightBrushSize={rightBrushSize}
+                rightBrushStyle={rightBrushStyle}
+                rightBrushOpacity={rightBrushOpacity}
+                rightCurrentTool={rightCurrentTool}
+                rightWobblyMode={rightWobblyMode}
+                rightRandomColorMode={rightRandomColorMode}
+                rightMirrorMode={rightMirrorMode}
+                rightGlowMode={rightGlowMode}
+                rightScatterMode={rightScatterMode}
+                rightNeonMode={rightNeonMode}
+                rightDiscoMode={rightDiscoMode}
+                rightGravityMode={rightGravityMode}
+                rightZigzagMode={rightZigzagMode}
+                rightPixelMode={rightPixelMode}
+                onColorPick={handleColorPick}
+                setLeftBrushColor={setLeftBrushColor}
+                setRightBrushColor={setRightBrushColor}
+                onSendLove={sendLove}
+              />
+              </div>
 
-        {/* Canvas - The Main Focus */}
-        <div className="flex-1 relative bg-stone-50 m-2 rounded-2xl shadow-lg border border-stone-200/50 overflow-hidden">
-          {/* Left Player Mini Toolbar */}
-          <MiniToolbar
-            side="left"
-            brushColor={leftBrushColor}
-            setBrushColor={setLeftBrushColor}
-            brushSize={leftBrushSize}
-            setBrushSize={setLeftBrushSize}
-            brushStyle={leftBrushStyle}
-            setBrushStyle={setLeftBrushStyle}
-            brushOpacity={leftBrushOpacity}
-            setBrushOpacity={setLeftBrushOpacity}
-            currentTool={leftCurrentTool}
-            setCurrentTool={setLeftCurrentTool}
-            onClear={clearLeftCanvas}
+              {/* 2. Toolbars outside clipping area */}
+              {/* Left Player Mini Toolbar */}
+              <MiniToolbar
+                side="left"
+                brushColor={leftBrushColor}
+                setBrushColor={setLeftBrushColor}
+                brushSize={leftBrushSize}
+                setBrushSize={setLeftBrushSize}
+                brushStyle={leftBrushStyle}
+                setBrushStyle={setLeftBrushStyle}
+                brushOpacity={leftBrushOpacity}
+                setBrushOpacity={setLeftBrushOpacity}
+                currentTool={leftCurrentTool}
+                setCurrentTool={setLeftCurrentTool}
+                onClear={clearLeftCanvas}
             onUndo={handleLeftUndo}
             onRedo={handleLeftRedo}
             onSave={handleLeftSave}
@@ -666,6 +783,8 @@ export default function Home() {
             setZigzagMode={setLeftZigzagMode}
             pixelMode={leftPixelMode}
             setPixelMode={setLeftPixelMode}
+            onSendLove={sendLove}
+            unlockedItems={unlockedItems}
           />
 
           {/* Right Player Mini Toolbar */}
@@ -706,83 +825,79 @@ export default function Home() {
             setZigzagMode={setRightZigzagMode}
             pixelMode={rightPixelMode}
             setPixelMode={setRightPixelMode}
-          />
-
-          <Canvas
-            ref={canvasLogicRef}
-            canvasRef={canvasRef}
-            leftBrushColor={leftBrushColor}
-            leftBrushSize={leftBrushSize}
-            leftBrushStyle={leftBrushStyle}
-            leftBrushOpacity={leftBrushOpacity}
-            leftCurrentTool={leftCurrentTool}
-            leftWobblyMode={leftWobblyMode}
-            leftRandomColorMode={leftRandomColorMode}
-            leftMirrorMode={leftMirrorMode}
-            leftGlowMode={leftGlowMode}
-            leftScatterMode={leftScatterMode}
-            leftNeonMode={leftNeonMode}
-            leftDiscoMode={leftDiscoMode}
-            leftGravityMode={leftGravityMode}
-            leftZigzagMode={leftZigzagMode}
-            leftPixelMode={leftPixelMode}
-            rightBrushColor={rightBrushColor}
-            rightBrushSize={rightBrushSize}
-            rightBrushStyle={rightBrushStyle}
-            rightBrushOpacity={rightBrushOpacity}
-            rightCurrentTool={rightCurrentTool}
-            rightWobblyMode={rightWobblyMode}
-            rightRandomColorMode={rightRandomColorMode}
-            rightMirrorMode={rightMirrorMode}
-            rightGlowMode={rightGlowMode}
-            rightScatterMode={rightScatterMode}
-            rightNeonMode={rightNeonMode}
-            rightDiscoMode={rightDiscoMode}
-            rightGravityMode={rightGravityMode}
-            rightZigzagMode={rightZigzagMode}
-            rightPixelMode={rightPixelMode}
-            onColorPick={handleColorPick}
-            setLeftBrushColor={setLeftBrushColor}
-            setRightBrushColor={setRightBrushColor}
+            onSendLove={sendLove}
+            unlockedItems={unlockedItems}
           />
           
           {/* Game Overlays */}
-          {pongActive && <PongGame onClose={handleClosePong} />}
+          {pongActive && (
+            <PongGame 
+              isActive={pongActive}
+              playerSide={roomInfo.side}
+              leftPaddleImage={pongPaddles.left}
+              rightPaddleImage={pongPaddles.right}
+              onClose={handleClosePong}
+              onGameWin={handleGameWin}
+            />
+          )}
           
-          {galagaActive && (
+          {GalagaGame && galagaActive && (
               <GalagaGame 
                 onClose={() => setGalagaActive(false)} 
                 side={roomInfo.side}
                 leftShipImage={galagaShips.left}
                 rightShipImage={galagaShips.right}
+                onGameWin={handleGameWin}
+              />
+          )}
+
+          {TronGame && tronActive && (
+              <TronGame 
+                onClose={() => setTronActive(false)} 
+                playerSide={roomInfo.side}
+                leftImage={tronImages.left}
+                rightImage={tronImages.right}
+                onGameWin={handleGameWin}
+              />
+          )}
+
+          {PacmanGame && pacmanActive && (
+              <PacmanGame 
+                onClose={() => setPacmanActive(false)} 
+                side={roomInfo.side}
+                leftPacmanImage={pacmanImages.left}
+                rightPacmanImage={pacmanImages.right}
+                onGameWin={handleGameWin}
               />
           )}
 
           {/* Game Toggle Button (Mobile) - Warm Theme */}
           <button
             onClick={() => setIsGameOpen(!isGameOpen)}
-            className="fixed bottom-4 left-4 z-40 p-4 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-2xl shadow-xl hover:from-amber-500 hover:to-orange-600 focus:outline-none focus:ring-4 focus:ring-amber-300 transition-all transform hover:scale-105 md:hidden border-2 border-white/20"
+            className="fixed bottom-4 left-4 z-40 p-3 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-xl shadow-lg hover:shadow-xl active:scale-95 transition-all md:hidden border border-white/20"
             aria-label={isGameOpen ? "Close Game" : "Open Game"}
           >
-            <span className="text-xl">🎮</span>
+            <span className="text-lg">🎮</span>
           </button>
           
           {/* Chat Toggle Button (Mobile) - Cool Theme */}
           <button
             onClick={() => setIsChatOpen(!isChatOpen)}
-            className="fixed bottom-4 right-4 z-40 p-4 bg-gradient-to-br from-sky-400 to-indigo-500 text-white rounded-2xl shadow-xl hover:from-sky-500 hover:to-indigo-600 focus:outline-none focus:ring-4 focus:ring-sky-300 transition-all transform hover:scale-105 md:hidden border-2 border-white/20"
+            className="fixed bottom-4 right-4 z-40 p-3 bg-gradient-to-br from-sky-400 to-indigo-500 text-white rounded-xl shadow-lg hover:shadow-xl active:scale-95 transition-all md:hidden border border-white/20"
             aria-label={isChatOpen ? "Close Chat" : "Open Chat"}
           >
-            <span className="text-xl">💬</span>
+            <span className="text-lg">💬</span>
           </button>
+            </div>
+          </div>
         </div>
 
         {/* Chat Sidebar - Right Player Theme (Cool) */}
         <ChatSidebar
           className={`
-            fixed inset-y-0 right-0 w-80 bg-gradient-to-b from-sky-50 via-indigo-50/80 to-sky-50 shadow-2xl transform transition-transform duration-300 ease-in-out z-30 sidebar-glass
+            fixed inset-y-0 right-0 w-80 bg-gradient-to-b from-sky-50 via-indigo-50/80 to-sky-50 shadow-xl transform transition-transform duration-300 ease-in-out z-30
             ${isChatOpen ? 'translate-x-0' : 'translate-x-full'}
-            md:relative md:translate-x-0 md:w-80 md:shadow-xl md:border-l-2 md:border-sky-200/50
+            md:relative md:translate-x-0 md:w-64 lg:w-80 md:shadow-lg md:border-l md:border-sky-200/50
           `}
           messages={messages}
           onSendMessage={handleSendMessage}

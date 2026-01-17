@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from 'react'
 import socket from '@/lib/socket'
 
-export default function GalagaGame({ onClose, side, leftShipImage, rightShipImage }) {
+export default function GalagaGame({ onClose, side, leftShipImage, rightShipImage, onGameWin }) {
   const canvasRef = useRef(null)
   const [gameOver, setGameOver] = useState(false)
   const [score, setScore] = useState(0)
+  const [levelCleared, setLevelCleared] = useState(false)
   const [winner, setWinner] = useState(null) // 'coop' so just game over message? Or separate scores? Let's do shared score.
 
   const gameState = useRef({
@@ -19,7 +20,8 @@ export default function GalagaGame({ onClose, side, leftShipImage, rightShipImag
     stars: [],
     lastShot: 0,
     frameCount: 0,
-    score: 0
+    score: 0,
+    active: true
   })
 
   // Load images
@@ -93,7 +95,13 @@ export default function GalagaGame({ onClose, side, leftShipImage, rightShipImag
       gameState.current.enemies = gameState.current.enemies.filter(e => e.id !== enemyId)
       gameState.current.score += 100
       setScore(gameState.current.score)
-      // Play sound?
+      
+      // Win condition: All enemies cleared
+      if (gameState.current.enemies.length === 0 && gameState.current.active) {
+          gameState.current.active = false
+          setLevelCleared(true)
+          onGameWin && onGameWin(50)
+      }
     }
 
     const onSyncEnemies = ({ enemies }) => {
@@ -268,13 +276,40 @@ export default function GalagaGame({ onClose, side, leftShipImage, rightShipImag
             </button>
         </div>
         
-        <canvas 
-            ref={canvasRef}
-            width={800}
-            height={600}
-            className="bg-slate-900 rounded-lg shadow-inner cursor-none"
-            style={{ maxWidth: '90vw', maxHeight: '80vh' }}
-        />
+        <div className="relative">
+            <canvas 
+                ref={canvasRef}
+                width={800}
+                height={600}
+                className="bg-slate-900 rounded-lg shadow-inner cursor-none"
+                style={{ maxWidth: '90vw', maxHeight: '80vh' }}
+            />
+            
+            {/* Game Over / Win Overlays */}
+            {(gameOver || levelCleared) && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm rounded-lg">
+                    <div className="text-center p-8 bg-slate-800 border border-slate-600 rounded-xl shadow-2xl transform animate-in fade-in zoom-in duration-300">
+                        <h3 className={`text-4xl font-bold mb-4 font-mono ${levelCleared ? 'text-green-400' : 'text-red-500'}`}>
+                            {levelCleared ? 'MISSION COMPLETE' : 'GENERATOR DESTROYED'}
+                        </h3>
+                        <p className="text-white text-xl mb-6 font-mono">
+                            Final Score: {score}
+                        </p>
+                        {levelCleared && (
+                            <div className="mb-6 text-yellow-400 font-bold animate-pulse">
+                                +50 Coins Awarded!
+                            </div>
+                        )}
+                        <button
+                            onClick={onClose}
+                            className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-500 hover:to-purple-500 transition-all font-bold shadow-lg"
+                        >
+                            Return to Base
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
         
         <div className="mt-4 flex justify-between text-xs text-slate-400 font-mono px-4">
             <span>CONTROLS: Arrow Keys to Move, Space to Shoot</span>

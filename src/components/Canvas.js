@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react'
 import socket from '@/lib/socket'
 import { getBrushSettings, getRandomColor, applyWobble, hexToRgb } from '@/lib/canvasUtils'
-import { useGestures } from '@/hooks/useGestures'
 
 const Canvas = forwardRef((props, ref) => {
   const {
@@ -46,7 +45,6 @@ const Canvas = forwardRef((props, ref) => {
   setRightBrushColor,
 } = props
 
-  const { scale, offset } = useGestures(canvasRef)
   const [isDrawing, setIsDrawing] = useState(false)
   const [startPos, setStartPos] = useState({ x: 0, y: 0 })
   const [activeSide, setActiveSide] = useState(null) // 'left' | 'right'
@@ -76,20 +74,51 @@ const Canvas = forwardRef((props, ref) => {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // Set canvas size to match parent container
-    const setCanvasSize = () => {
-      const parent = canvas.parentElement
-      if (parent) {
-        canvas.width = parent.clientWidth
-        canvas.height = parent.clientHeight
-      }
+    let timeoutId = null
+    const handleResize = () => {
+      if (timeoutId) clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => {
+        const parent = canvas.parentElement
+        if (parent && parent.clientWidth > 0 && parent.clientHeight > 0) {
+            // Save current content
+            const tempCanvas = document.createElement('canvas')
+            tempCanvas.width = canvas.width
+            tempCanvas.height = canvas.height
+            const tempCtx = tempCanvas.getContext('2d')
+            if (canvas.width > 0 && canvas.height > 0) {
+                tempCtx.drawImage(canvas, 0, 0)
+            }
+            
+            // Resize
+            canvas.width = parent.clientWidth
+            canvas.height = parent.clientHeight
+            
+            // Restore content (scaled)
+            if (tempCanvas.width > 0 && tempCanvas.height > 0) {
+                ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, canvas.width, canvas.height)
+            }
+            
+            // Re-apply context settings
+            ctx.lineCap = 'round'
+            ctx.lineJoin = 'round'
+            ctxRef.current = ctx
+        }
+      }, 100)
     }
 
-    setCanvasSize()
-
+    // Initial size
+    // ...existing code...
+    const parent = canvas.parentElement
+    if (parent) {
+       canvas.width = parent.clientWidth
+       canvas.height = parent.clientHeight
+    }
+    
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
     ctxRef.current = ctx
+    
+    window.addEventListener('resize', handleResize)
 
     const drawRemote = (data) => {
       const { type, startX, startY, endX, endY, offsetX, offsetY, brushColor, brushSize, brushOpacity, brushStyle, erasing, prevX, prevY } = data
@@ -177,14 +206,6 @@ const Canvas = forwardRef((props, ref) => {
 
     socket.on('draw', drawRemote)
 
-    const handleResize = () => {
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-      setCanvasSize()
-      ctx.putImageData(imageData, 0, 0)
-    }
-
-    window.addEventListener('resize', handleResize)
-
     return () => {
       socket.off('draw', drawRemote)
       window.removeEventListener('resize', handleResize)
@@ -258,6 +279,7 @@ const Canvas = forwardRef((props, ref) => {
     // Apply wobble if enabled
     const drawPos = wobblyMode ? applyWobble(x, y) : { x, y }
 
+    ctx.beginPath() // Ensure we start a fresh path for this stroke
     ctx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : actualColor
     ctx.lineWidth = brushSize
     ctx.globalAlpha = brushOpacity
@@ -555,6 +577,10 @@ const Canvas = forwardRef((props, ref) => {
     } else {
       const { x: prevX, y: prevY } = lastPos.current || { x: actualX, y: actualY }
       
+      // Ensure context settings are correct for manual drawing
+      ctx.lineWidth = brushSize
+      ctx.globalAlpha = brushOpacity
+
       // Apply glow effect if enabled (including disco glow)
       if (glowMode || neonMode || discoMode) {
         ctx.shadowBlur = neonMode ? 20 : discoMode ? 25 : 15
@@ -737,8 +763,8 @@ const Canvas = forwardRef((props, ref) => {
     
     // Scale correction
     return {
-        x: (clientX - rect.left) / scale,
-        y: (clientY - rect.top) / scale
+        x: (clientX - rect.left),
+        y: (clientY - rect.top)
     }
   }
 
@@ -1016,49 +1042,36 @@ const Canvas = forwardRef((props, ref) => {
   }))
 
   return (
-    <div className="relative w-full h-full">
-      {/* Center divider - shows boundary between left and right players */}
-      <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-1 pointer-events-none z-10">
-        {/* Gradient line */}
-        <div className="absolute inset-0 bg-gradient-to-b from-amber-400/40 via-stone-400/60 to-sky-400/40" />
-        {/* Dashed overlay for style */}
-        <div className="absolute inset-0 border-l border-dashed border-stone-400/30" />
-      </div>
-      {/* Left side label */}
-      <div className="absolute top-16 left-4 px-2 py-1 bg-amber-100/80 rounded-md text-[10px] font-medium text-amber-600 pointer-events-none z-10 backdrop-blur-sm">
-        🎨 Left
-      </div>
-      {/* Right side label */}
-      <div className="absolute top-16 right-4 px-2 py-1 bg-sky-100/80 rounded-md text-[10px] font-medium text-sky-600 pointer-events-none z-10 backdrop-blur-sm">
-        🖌️ Right
-      </div>
+    <div 
+      className="absolute inset-0 select-none" 
+      style={{ 
+        touchAction: 'none', 
+        overscrollBehavior: 'none',
+        WebkitUserSelect: 'none',
+        userSelect: 'none'
+      }}
+    >
       <div 
-        className="w-full h-full overflow-hidden relative touch-none"
-        style={{ 
-          cursor: scale > 1 ? 'grab' : 'crosshair'
-        }}
+        className="absolute inset-0 overflow-hidden"
+        style={{ cursor: 'crosshair' }}
       >
-        <div style={{
-           transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
-           transformOrigin: '0 0',
-           width: '100%',
-           height: '100%',
-           transition: isDrawing ? 'none' : 'transform 0.1s linear'
-        }}>
-          <canvas
-            ref={canvasRef}
-            className="w-full h-full touch-none"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={stopDrawing}
-            role="application"
-            aria-label="Drawing canvas"
-          />
-        </div>
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={stopDrawing}
+          onMouseLeave={stopDrawing}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={stopDrawing}
+          role="application"
+          aria-label="Drawing canvas - Left side for Player 1, Right side for Player 2"
+          style={{
+            touchAction: 'none',
+            WebkitTouchCallout: 'none'
+          }}
+        />
       </div>
     </div>
   )

@@ -9,6 +9,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "canvas-confetti": "^1.9.4",
     "express": "^4.18.2",
     "next": "^16.1.1",
     "react": "^19.2.3",

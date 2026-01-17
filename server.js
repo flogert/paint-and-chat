@@ -218,6 +218,12 @@ app.prepare().then(() => {
       }
     });
 
+    socket.on("pong-game-over", ({ winner }) => {
+      if (currentRoom) {
+        io.to(currentRoom).emit("pong-game-over", { winner });
+      }
+    });
+
     // Pong Ready/Start logic (Updated for image support)
     socket.on('pong-ready', ({ side, paddleImage }) => {
       if (!currentRoom || !rooms.has(currentRoom)) return;

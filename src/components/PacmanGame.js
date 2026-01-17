@@ -50,6 +50,7 @@ export default function PacmanGame({ side, onClose, leftPacmanImage, rightPacman
   const [score, setScore] = useState({ left: 0, right: 0 })
   const [gameOver, setGameOver] = useState(false)
   const [winner, setWinner] = useState(null)
+  const gameOverRef = useRef(false)
   
   // Players state (positions allow decimals for smooth movement)
   // Grid coordinates are Math.floor(pixelPos / CELL_SIZE)
@@ -239,13 +240,21 @@ export default function PacmanGame({ side, onClose, leftPacmanImage, rightPacman
        }
        
        // Check win condition (all pellets eaten)
-       if (pelletsRef.current.every(pl => !pl.active) && !gameOver) {
+       if (pelletsRef.current.every(pl => !pl.active) && !gameOverRef.current) {
+           gameOverRef.current = true
            setGameOver(true)
-           const w = score.left > score.right ? 'left' : 'right'
+           
+           const pScores = playersRef.current
+           let w = null
+           if (pScores.left.score > pScores.right.score) w = 'left'
+           else if (pScores.right.score > pScores.left.score) w = 'right'
+           else w = 'tie'
+           
            setWinner(w)
-           if (w === side) {
-                onGameWin && onGameWin(50) // 50 coins for clearing maze
-                sounds.success()
+
+           if (w === side || w === 'tie') {
+                onGameWin && onGameWin(50) 
+                sounds.success && sounds.success() // Check if exists
            }
        }
        
